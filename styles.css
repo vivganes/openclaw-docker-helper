@@ -57,6 +57,33 @@ header h1 {
 .subtitle {
     color: var(--text-secondary);
     font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+/* GitHub Link */
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background-color: #24292e;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.github-link:hover {
+    background-color: #2f363d;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.github-link svg {
+    flex-shrink: 0;
 }
 
 /* Wizard Container */
