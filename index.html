@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Docker Setup Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>OpenClaw Docker Setup Wizard</h1>
+            <p class="subtitle">Generate copy-pasteable bash scripts for Windows (Git Bash), Linux, or Mac</p>
+        </header>
+
+        <div class="wizard">
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-step active" data-step="1">
+                    <span class="step-number">1</span>
+                    <span class="step-label">OS</span>
+                </div>
+                <div class="progress-step" data-step="2">
+                    <span class="step-number">2</span>
+                    <span class="step-label">Config</span>
+                </div>
+                <div class="progress-step" data-step="3">
+                    <span class="step-number">3</span>
+                    <span class="step-label">Channels</span>
+                </div>
+                <div class="progress-step" data-step="4">
+                    <span class="step-number">4</span>
+                    <span class="step-label">Script</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Operating System -->
+            <div class="step-content active" id="step-1">
+                <h2>Select Your Operating System</h2>
+                <p class="step-description">Choose the operating system you're installing on. This affects path formatting and shell compatibility.</p>
+                
+                <div class="option-cards">
+                    <div class="option-card" data-os="windows">
+                        <div class="card-icon">🪟</div>
+                        <h3>Windows (Git Bash)</h3>
+                        <p>Windows with Git Bash, WSL, or similar Unix-like shell</p>
+                    </div>
+                    <div class="option-card" data-os="linux">
+                        <div class="card-icon">🐧</div>
+                        <h3>Linux</h3>
+                        <p>Ubuntu, Debian, Fedora, or other Linux distributions</p>
+                    </div>
+                    <div class="option-card" data-os="mac">
+                        <div class="card-icon">🍎</div>
+                        <h3>macOS</h3>
+                        <p>Mac with Terminal or iTerm2</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="install-path">Installation Directory (optional)</label>
+                    <input type="text" id="install-path" placeholder="Leave empty to use current directory">
+                    <p class="help-text">Where the OpenClaw repository will be cloned and set up</p>
+                </div>
+            </div>
+
+            <!-- Step 2: Configuration Options -->
+            <div class="step-content" id="step-2">
+                <h2>Configuration Options</h2>
+                <p class="step-description">Customize your Docker setup with optional configurations.</p>
+
+                <div class="config-section">
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-extra-mounts">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Enable Extra Mounts</span>
+                        </label>
+                        <p class="help-text">Mount additional host directories into containers (e.g., for project access)</p>
+                    </div>
+
+                    <div class="conditional-field" id="extra-mounts-field">
+                        <div class="form-group">
+                            <label>Extra Mounts</label>
+                            <p class="help-text" style="margin-bottom: 0.75rem;">Mount additional host directories into containers</p>
+                            <div id="mounts-container">
+                                <div class="mount-row">
+                                    <input type="text" class="mount-host" placeholder="$HOME/.codex" title="Host path">
+                                    <span class="mount-separator">→</span>
+                                    <input type="text" class="mount-container" placeholder="/home/node/.codex" title="Container path">
+                                    <select class="mount-mode" title="Access mode">
+                                        <option value="ro">Read-only (ro)</option>
+                                        <option value="rw">Read-write (rw)</option>
+                                    </select>
+                                    <button class="mount-remove" title="Remove this mount">×</button>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary add-mount-btn" id="add-mount">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Mount
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-home-volume">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Persist Container Home Directory</span>
+                        </label>
+                        <p class="help-text">Create a named volume for /home/node to persist data across container recreations</p>
+                    </div>
+
+                    <div class="conditional-field" id="home-volume-field">
+                        <div class="form-group">
+                            <label for="home-volume-name">Volume Name</label>
+                            <input type="text" id="home-volume-name" value="openclaw_home" placeholder="openclaw_home">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-apt-packages">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Install Extra APT Packages</span>
+                        </label>
+                        <p class="help-text">Install system packages inside the image (e.g., ffmpeg, build tools)</p>
+                    </div>
+
+                    <div class="conditional-field" id="apt-packages-field">
+                        <div class="form-group">
+                            <label>APT Packages</label>
+                            <p class="help-text" style="margin-bottom: 0.75rem;">Click to add suggested packages or type custom ones</p>
+                            
+                            <div class="package-suggestions">
+                                <span class="package-tag" data-package="ffmpeg">ffmpeg</span>
+                                <span class="package-tag" data-package="build-essential">build-essential</span>
+                                <span class="package-tag" data-package="git">git</span>
+                                <span class="package-tag" data-package="curl">curl</span>
+                                <span class="package-tag" data-package="jq">jq</span>
+                                <span class="package-tag" data-package="vim">vim</span>
+                                <span class="package-tag" data-package="nano">nano</span>
+                                <span class="package-tag" data-package="wget">wget</span>
+                                <span class="package-tag" data-package="python3">python3</span>
+                                <span class="package-tag" data-package="nodejs">nodejs</span>
+                                <span class="package-tag" data-package="npm">npm</span>
+                                <span class="package-tag" data-package="chromium">chromium</span>
+                            </div>
+                            
+                            <div class="selected-packages" id="selected-packages">
+                                <span class="no-packages">No packages selected</span>
+                            </div>
+                            
+                            <div class="custom-package-input">
+                                <input type="text" id="custom-package" placeholder="Add custom package...">
+                                <button class="btn btn-primary" id="add-custom-package">Add</button>
+                            </div>
+                            
+                            <input type="hidden" id="apt-packages" value="">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-clawdock" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Install ClawDock Helpers</span>
+                        </label>
+                        <p class="help-text">Install shell helpers for easier Docker management (clawdock-start, clawdock-stop, etc.)</p>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-sandbox">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Build Sandbox Image</span>
+                        </label>
+                        <p class="help-text">Build the sandbox image for isolated tool execution</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Channel Setup -->
+            <div class="step-content" id="step-3">
+                <h2>Channel Setup (Optional)</h2>
+                <p class="step-description">Configure messaging channels for your OpenClaw gateway. You can also do this later.</p>
+
+                <div class="channel-options">
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-whatsapp">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">WhatsApp</span>
+                        </label>
+                        <p class="help-text">Configure WhatsApp via QR code scan</p>
+                    </div>
+
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-telegram">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Telegram</span>
+                        </label>
+                        <p class="help-text">Configure Telegram bot</p>
+                    </div>
+
+                    <div class="conditional-field" id="telegram-token-field">
+                        <div class="form-group">
+                            <label for="telegram-token">Telegram Bot Token</label>
+                            <input type="text" id="telegram-token" placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxyz">
+                        </div>
+                    </div>
+
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-discord">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Discord</span>
+                        </label>
+                        <p class="help-text">Configure Discord bot</p>
+                    </div>
+
+                    <div class="conditional-field" id="discord-token-field">
+                        <div class="form-group">
+                            <label for="discord-token">Discord Bot Token</label>
+                            <input type="text" id="discord-token" placeholder="YOUR_DISCORD_BOT_TOKEN">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Generated Script -->
+            <div class="step-content" id="step-4">
+                <h2>Your Installation Script</h2>
+                <p class="step-description">Copy and paste this script into your terminal to install OpenClaw with Docker.</p>
+
+                <div class="script-container">
+                    <div class="script-header">
+                        <span class="script-label">install-openclaw.sh</span>
+                        <button class="copy-btn" id="copy-script">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Copy to Clipboard
+                        </button>
+                    </div>
+                    <pre class="script-code"><code id="generated-script">#!/bin/bash
+
+# OpenClaw Docker Installation Script
+# Generated by OpenClaw Docker Setup Wizard
+
+set -e
+
+echo "Starting OpenClaw Docker installation..."
+
+# Clone repository
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw
+
+# Run setup script
+./docker-setup.sh
+
+echo "Installation complete!"
+echo "Open http://127.0.0.1:18789/ in your browser"
+echo "Use the token shown above to authenticate"</code></pre>
+                </div>
+
+                <div class="post-install">
+                    <h3>Next Steps</h3>
+                    <ul>
+                        <li>Open <code>http://127.0.0.1:18789/</code> in your browser</li>
+                        <li>Paste the generated token into the Control UI (Settings → Token)</li>
+                        <li>Run <code>docker compose run --rm openclaw-cli dashboard --no-open</code> to get the dashboard URL anytime</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="wizard-nav">
+                <button class="btn btn-secondary" id="prev-btn" disabled>← Previous</button>
+                <button class="btn btn-primary" id="next-btn">Next →</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Based on <a href="https://docs.openclaw.ai/install/docker" target="_blank">OpenClaw Docker Documentation</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
