@@ -23,7 +23,8 @@
                 value: ''
             },
             clawdock: true,
-            sandbox: false
+            sandbox: false,
+            skipClone: false
         },
         channels: {
             whatsapp: false,
@@ -85,6 +86,10 @@
             state.config.aptPackages.enabled = checked;
         });
 
+        bindToggle('skip-clone', null, (checked) => {
+            state.config.skipClone = checked;
+        });
+
         bindToggle('enable-clawdock', null, (checked) => {
             state.config.clawdock = checked;
         });
@@ -140,6 +145,17 @@
         document.querySelectorAll('.mount-remove').forEach(btn => {
             btn.addEventListener('click', (e) => removeMountRow(e.target));
         });
+
+        // Bind directory picker buttons
+        document.querySelectorAll('.directory-picker-btn').forEach(btn => {
+            btn.addEventListener('click', () => openDirectoryPicker(btn.closest('.mount-row')));
+        });
+
+        // Bind the hidden directory picker input
+        const dirPicker = document.getElementById('directory-picker');
+        if (dirPicker) {
+            dirPicker.addEventListener('change', handleDirectorySelection);
+        }
     }
 
     // Add a new mount row
@@ -148,7 +164,12 @@
         const newRow = document.createElement('div');
         newRow.className = 'mount-row';
         newRow.innerHTML = `
-            <input type="text" class="mount-host" placeholder="$HOME/project" title="Host path">
+            <div class="mount-host-wrapper">
+                <input type="text" class="mount-host" placeholder="$HOME/project" title="Host path">
+                <button type="button" class="directory-picker-btn" title="Browse for directory">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                </button>
+            </div>
             <span class="mount-separator">→</span>
             <input type="text" class="mount-container" placeholder="/home/node/project" title="Container path">
             <select class="mount-mode" title="Access mode">
@@ -161,6 +182,49 @@
         
         // Bind remove button
         newRow.querySelector('.mount-remove').addEventListener('click', (e) => removeMountRow(e.target));
+        
+        // Bind directory picker button
+        const pickerBtn = newRow.querySelector('.directory-picker-btn');
+        if (pickerBtn) {
+            pickerBtn.addEventListener('click', () => openDirectoryPicker(newRow));
+        }
+    }
+    
+    // Open directory picker for a mount row
+    function openDirectoryPicker(row) {
+        const input = document.getElementById('directory-picker');
+        const hostInput = row.querySelector('.mount-host');
+        
+        // Store reference to the target input
+        input.dataset.targetRow = row;
+        
+        // Clear previous selection and trigger click
+        input.value = '';
+        input.click();
+    }
+    
+    // Handle directory selection
+    function handleDirectorySelection(e) {
+        const files = e.target.files;
+        if (files.length === 0) return;
+        
+        // Get the directory path from the first file's path
+        const filePath = files[0].webkitRelativePath || files[0].name;
+        const dirPath = filePath.split('/')[0];
+        
+        // Find the active mount row and update its input
+        const rows = document.querySelectorAll('.mount-row');
+        let updated = false;
+        
+        rows.forEach(row => {
+            const hostInput = row.querySelector('.mount-host');
+            if (hostInput && !hostInput.value && !updated) {
+                // Get the full path (this is tricky in browsers, we'll use what we can)
+                // For file:// protocol, we can try to construct a reasonable path
+                hostInput.value = dirPath;
+                updated = true;
+            }
+        });
     }
 
     // Remove a mount row
@@ -436,21 +500,35 @@
             );
         }
 
-        // Clone repository
-        lines.push(
-            '# Clone OpenClaw repository',
-            'echo "Cloning OpenClaw repository..."',
-            'if [ -d "openclaw" ]; then',
-            '    echo "Directory openclaw already exists. Pulling latest changes..."',
-            '    cd openclaw',
-            '    git pull',
-            'else',
-            '    git clone https://github.com/openclaw/openclaw.git',
-            '    cd openclaw',
-            'fi',
-            'echo "✓ Repository ready"',
-            'echo ""'
-        );
+        // Clone repository (if not skipped)
+        if (!state.config.skipClone) {
+            lines.push(
+                '# Clone OpenClaw repository',
+                'echo "Cloning OpenClaw repository..."',
+                'if [ -d "openclaw" ]; then',
+                '    echo "Directory openclaw already exists. Pulling latest changes..."',
+                '    cd openclaw',
+                '    git pull',
+                'else',
+                '    git clone https://github.com/openclaw/openclaw.git',
+                '    cd openclaw',
+                'fi',
+                'echo "✓ Repository ready"',
+                'echo ""'
+            );
+        } else {
+            lines.push(
+                '# Using existing repository (clone skipped)',
+                'echo "Using existing OpenClaw repository..."',
+                'if [ -f "docker-setup.sh" ]; then',
+                '    echo "✓ Repository detected in current directory"',
+                'else',
+                '    echo "Error: docker-setup.sh not found. Are you in the openclaw directory?" >&2',
+                '    exit 1',
+                'fi',
+                'echo ""'
+            );
+        }
 
         // Environment variables
         const envVars = [];
@@ -668,9 +746,17 @@
         selectOS(detectedOS);
     }
 
+    // Check if running locally (file:// protocol)
+    function detectLocalFile() {
+        if (window.location.protocol === 'file:') {
+            document.body.classList.add('local-file');
+        }
+    }
+
     // Start the wizard
     document.addEventListener('DOMContentLoaded', () => {
         init();
         detectOS();
+        detectLocalFile();
     });
 })();

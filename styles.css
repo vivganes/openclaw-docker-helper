@@ -412,9 +412,44 @@ header h1 {
     font-family: inherit;
 }
 
-.mount-host {
+.mount-host-wrapper {
     flex: 1.5;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.mount-host-wrapper .mount-host {
+    flex: 1;
+    min-width: 0;
+}
+
+.directory-picker-btn {
+    display: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    background-color: white;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Show directory picker buttons only when opened locally (file:// protocol) */
+body.local-file .directory-picker-btn {
+    display: flex;
+}
+
+.directory-picker-btn:hover {
+    background-color: var(--background-color);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .mount-container {
