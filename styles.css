@@ -659,9 +659,10 @@ body.local-file .directory-picker-btn {
     color: var(--text-primary);
 }
 
-.post-install ul {
-    list-style: none;
+.post-install ul,
+.post-install ol {
     padding-left: 0;
+    margin: 0;
 }
 
 .post-install li {
@@ -670,11 +671,28 @@ body.local-file .directory-picker-btn {
     position: relative;
 }
 
-.post-install li::before {
+.post-install ul li::before {
     content: '→';
     position: absolute;
     left: 0;
     color: var(--primary-color);
+}
+
+.post-install ol {
+    list-style: none;
+    counter-reset: step;
+}
+
+.post-install ol li {
+    counter-increment: step;
+}
+
+.post-install ol li::before {
+    content: counter(step) '.';
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: 600;
 }
 
 .post-install code {
@@ -783,4 +801,26 @@ footer a:hover {
         gap: 0.75rem;
         align-items: flex-start;
     }
+}
+
+/* Toast Notification */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #1f2937;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateY(0);
 }

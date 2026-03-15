@@ -24,6 +24,7 @@
             },
             clawdock: true,
             sandbox: false,
+            playwright: false,
             skipClone: false
         },
         channels: {
@@ -96,6 +97,16 @@
 
         bindToggle('enable-sandbox', null, (checked) => {
             state.config.sandbox = checked;
+        });
+
+        bindToggle('enable-playwright', null, (checked) => {
+            state.config.playwright = checked;
+            if (checked && !state.config.homeVolume.enabled) {
+                document.getElementById('enable-home-volume').checked = true;
+                state.config.homeVolume.enabled = true;
+                document.getElementById('home-volume-field').classList.add('visible');
+                showToast('Home volume auto-enabled to persist Playwright browsers');
+            }
         });
 
         bindToggle('enable-whatsapp', null, (checked) => {
@@ -388,6 +399,26 @@
         });
     }
 
+    // Toast notification
+    function showToast(message) {
+        const existing = document.querySelector('.toast-notification');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     // Select OS
     function selectOS(os) {
         state.os = os;
@@ -542,6 +573,17 @@
             envVars.push('export OPENCLAW_HOME_VOLUME="' + state.config.homeVolume.value + '"');
         }
 
+        if (state.config.playwright) {
+            envVars.push('export PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright');
+        }
+
+        // Set COMPOSE_OPTS to include docker-compose.extra.yml if needed
+        if (state.config.homeVolume.enabled || state.config.extraMounts.enabled || state.config.playwright) {
+            lines.push('COMPOSE_OPTS="-f docker-compose.yml -f docker-compose.extra.yml"');
+        } else {
+            lines.push('COMPOSE_OPTS="-f docker-compose.yml"');
+        }
+
         const packagesValue = Array.from(selectedPackages).join(' ');
         if (state.config.aptPackages.enabled && packagesValue) {
             envVars.push('export OPENCLAW_DOCKER_APT_PACKAGES="' + packagesValue + '"');
@@ -566,6 +608,40 @@
             'echo ""'
         );
 
+        // Add Playwright env vars to docker-compose.extra.yml after docker-setup.sh
+        if (state.config.playwright) {
+            lines.push(
+                '# Add Playwright environment to docker-compose.extra.yml',
+                'if [ -f "docker-compose.extra.yml" ]; then',
+                '    cat >> docker-compose.extra.yml << \'EOF\'',
+                '',
+                '  openclaw-gateway:',
+                '    environment:',
+                '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
+                '      - HOME=/home/node',
+                '  openclaw-cli:',
+                '    environment:',
+                '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
+                '      - HOME=/home/node',
+                'EOF',
+                'else',
+                '    cat > docker-compose.extra.yml << \'EOF\'',
+                'version: \'3.8\'',
+                'services:',
+                '  openclaw-gateway:',
+                '    environment:',
+                '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
+                '      - HOME=/home/node',
+                '  openclaw-cli:',
+                '    environment:',
+                '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
+                '      - HOME=/home/node',
+                'EOF',
+                'fi',
+                ''
+            );
+        }
+
         // Build sandbox if enabled
         if (state.config.sandbox) {
             lines.push(
@@ -573,6 +649,17 @@
                 'echo "Building sandbox image..."',
                 'scripts/sandbox-setup.sh',
                 'echo "✓ Sandbox image built"',
+                'echo ""'
+            );
+        }
+
+        // Install Playwright browsers if enabled
+        if (state.config.playwright) {
+            lines.push(
+                '# Install Playwright browsers',
+                'echo "Installing Playwright browsers..."',
+                'docker compose $COMPOSE_OPTS run --rm openclaw-cli "node /app/node_modules/playwright-core/cli.js install chromium"',
+                'echo "✓ Playwright browsers installed"',
                 'echo ""'
             );
         }
@@ -615,7 +702,7 @@
         if (state.channels.whatsapp) {
             channelCommands.push(
                 'echo "Setting up WhatsApp..."',
-                'docker compose run --rm openclaw-cli channels login',
+                'docker compose $COMPOSE_OPTS run --rm openclaw-cli channels login',
                 'echo ""'
             );
         }
@@ -623,7 +710,7 @@
         if (state.channels.telegram.enabled && state.channels.telegram.token) {
             channelCommands.push(
                 'echo "Setting up Telegram..."',
-                'docker compose run --rm openclaw-cli channels add --channel telegram --token "' + state.channels.telegram.token + '"',
+                'docker compose $COMPOSE_OPTS run --rm openclaw-cli channels add --channel telegram --token "' + state.channels.telegram.token + '"',
                 'echo ""'
             );
         }
@@ -631,7 +718,7 @@
         if (state.channels.discord.enabled && state.channels.discord.token) {
             channelCommands.push(
                 'echo "Setting up Discord..."',
-                'docker compose run --rm openclaw-cli channels add --channel discord --token "' + state.channels.discord.token + '"',
+                'docker compose $COMPOSE_OPTS run --rm openclaw-cli channels add --channel discord --token "' + state.channels.discord.token + '"',
                 'echo ""'
             );
         }
@@ -656,8 +743,8 @@
             'echo "  3. Start using OpenClaw!"',
             'echo ""',
             'echo "Useful commands:"',
-            'echo "  - docker compose ps           # Check container status"',
-            'echo "  - docker compose logs -f      # View logs"'
+            'echo "  - docker compose $COMPOSE_OPTS ps           # Check container status"',
+            'echo "  - docker compose $COMPOSE_OPTS logs -f      # View logs"'
         );
 
         if (state.config.clawdock) {
@@ -668,7 +755,7 @@
         }
 
         lines.push(
-            'echo "  - docker compose run --rm openclaw-cli dashboard --no-open"',
+            'echo "  - docker compose $COMPOSE_OPTS run --rm openclaw-cli dashboard --no-open"',
             'echo ""',
             'echo "For more info: https://docs.openclaw.ai/install/docker"'
         );

@@ -207,6 +207,17 @@
                         <p class="help-text">Build the sandbox image for isolated tool execution</p>
                     </div>
                 </div>
+
+                <div class="config-section">
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enable-playwright">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Install Playwright Browsers</span>
+                        </label>
+                        <p class="help-text">Install Chromium via Playwright inside the container (without npx). Automatically persists browser downloads.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Step 3: Channel Setup -->
@@ -261,7 +272,7 @@
             <!-- Step 4: Generated Script -->
             <div class="step-content" id="step-4">
                 <h2>Your Installation Script</h2>
-                <p class="step-description">Copy and paste this script into your terminal to install OpenClaw with Docker.</p>
+                <p class="step-description">Save this script to a file and run it in your terminal to install OpenClaw with Docker.</p>
 
                 <div class="script-container">
                     <div class="script-header">
@@ -294,11 +305,13 @@ echo "Use the token shown above to authenticate"</code></pre>
 
                 <div class="post-install">
                     <h3>Next Steps</h3>
-                    <ul>
+                    <ol>
+                        <li>Save the script above to a file (e.g., <code>install-openclaw.sh</code>)</li>
+                        <li>Run <code>chmod +x install-openclaw.sh</code> to make it executable</li>
+                        <li>Run <code>./install-openclaw.sh</code> in your terminal or Git Bash</li>
                         <li>Open <code>http://127.0.0.1:18789/</code> in your browser</li>
                         <li>Paste the generated token into the Control UI (Settings → Token)</li>
-                        <li>Run <code>docker compose run --rm openclaw-cli dashboard --no-open</code> to get the dashboard URL anytime</li>
-                    </ul>
+                    </ol>
                 </div>
             </div>
 
