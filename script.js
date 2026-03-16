@@ -618,7 +618,7 @@
             lines.push(
                 '# Install Homebrew (inside the Docker container)',
                 'echo "Installing Homebrew inside the container..."',
-                "docker compose $COMPOSE_OPTS run --rm --user root --entrypoint bash openclaw-cli -lc 'mkdir -p /home/linuxbrew && chmod 755 /home/linuxbrew && chown node:node /home/linuxbrew && NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\" && chown -R node:node /home/linuxbrew'",
+                "docker compose $COMPOSE_OPTS run --rm --user root --entrypoint bash openclaw-gateway -lc 'mkdir -p /home/linuxbrew && chmod 755 /home/linuxbrew && chown node:node /home/linuxbrew && NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\" && chown -R node:node /home/linuxbrew'",
                 'echo "✓ Homebrew install step complete"',
                 'echo ""'
             );
@@ -635,20 +635,12 @@
                 '    environment:',
                 '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
                 '      - HOME=/home/node',
-                '  openclaw-cli:',
-                '    environment:',
-                '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
-                '      - HOME=/home/node',
                 'EOF',
                 'else',
                 '    cat > docker-compose.extra.yml << \'EOF\'',
                 'version: \'3.8\'',
                 'services:',
                 '  openclaw-gateway:',
-                '    environment:',
-                '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
-                '      - HOME=/home/node',
-                '  openclaw-cli:',
                 '    environment:',
                 '      - PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright',
                 '      - HOME=/home/node',
@@ -674,7 +666,7 @@
             lines.push(
                 '# Install Playwright browsers',
                 'echo "Installing Playwright browsers..."',
-                'docker compose $COMPOSE_OPTS run --rm --entrypoint bash openclaw-cli -lc "node /app/node_modules/playwright-core/cli.js install chromium"',
+                'docker compose $COMPOSE_OPTS run --rm --entrypoint bash openclaw-gateway -lc "node /app/node_modules/playwright-core/cli.js install chromium"',
                 'echo "✓ Playwright browsers installed"',
                 'echo ""'
             );
@@ -771,7 +763,7 @@
         }
 
         lines.push(
-            'echo "  - docker compose $COMPOSE_OPTS run --rm openclaw-cli dashboard --no-open"',
+            'echo "  - docker compose $COMPOSE_OPTS run --rm openclaw-gateway dashboard --no-open"',
             'echo ""',
             'echo "For more info: https://docs.openclaw.ai/install/docker"'
         );
