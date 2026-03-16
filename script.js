@@ -618,7 +618,7 @@
             lines.push(
                 '# Install Homebrew (inside the Docker container)',
                 'echo "Installing Homebrew inside the container..."',
-                "docker compose $COMPOSE_OPTS run --rm openclaw-cli bash -lc 'NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"'",
+                "docker compose $COMPOSE_OPTS run --rm --entrypoint bash openclaw-cli -lc 'NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"'",
                 'echo "✓ Homebrew install step complete"',
                 'echo ""'
             );
@@ -674,7 +674,7 @@
             lines.push(
                 '# Install Playwright browsers',
                 'echo "Installing Playwright browsers..."',
-                'docker compose $COMPOSE_OPTS run --rm openclaw-cli "node /app/node_modules/playwright-core/cli.js install chromium"',
+                'docker compose $COMPOSE_OPTS run --rm --entrypoint bash openclaw-cli -lc "node /app/node_modules/playwright-core/cli.js install chromium"',
                 'echo "✓ Playwright browsers installed"',
                 'echo ""'
             );
