@@ -618,7 +618,7 @@
             lines.push(
                 '# Install Homebrew (inside the Docker container)',
                 'echo "Installing Homebrew inside the container..."',
-                "docker compose $COMPOSE_OPTS run --rm --entrypoint bash openclaw-cli -lc 'NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"'",
+                "docker compose $COMPOSE_OPTS run --rm --user root --entrypoint bash openclaw-cli -lc 'mkdir -p /home/linuxbrew && chmod 755 /home/linuxbrew && chown node:node /home/linuxbrew && NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\" && chown -R node:node /home/linuxbrew'",
                 'echo "✓ Homebrew install step complete"',
                 'echo ""'
             );
