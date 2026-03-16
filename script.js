@@ -22,6 +22,7 @@
                 enabled: false,
                 value: ''
             },
+            homebrew: false,
             clawdock: true,
             sandbox: false,
             playwright: false,
@@ -85,6 +86,10 @@
 
         bindToggle('enable-apt-packages', 'apt-packages-field', (checked) => {
             state.config.aptPackages.enabled = checked;
+        });
+
+        bindToggle('enable-homebrew', null, (checked) => {
+            state.config.homebrew = checked;
         });
 
         bindToggle('skip-clone', null, (checked) => {
@@ -607,6 +612,17 @@
             'echo "✓ Docker setup complete"',
             'echo ""'
         );
+
+        // Install Homebrew if requested
+        if (state.config.homebrew) {
+            lines.push(
+                '# Install Homebrew (inside the Docker container)',
+                'echo "Installing Homebrew inside the container..."',
+                "docker compose $COMPOSE_OPTS run --rm openclaw-cli bash -lc 'NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"'",
+                'echo "✓ Homebrew install step complete"',
+                'echo ""'
+            );
+        }
 
         // Add Playwright env vars to docker-compose.extra.yml after docker-setup.sh
         if (state.config.playwright) {

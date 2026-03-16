@@ -58,6 +58,7 @@ Customize your setup with smart toggles:
 - **Extra Mounts** — Visually add host directory mappings
 - **Persistent Storage** — Keep your data safe across container restarts
 - **APT Packages** — Click to add popular packages like ffmpeg, git, curl, and more
+- **Homebrew** — Optionally install Homebrew non-interactively (Linux/macOS)
 - **ClawDock Helpers** — Get convenient shell commands for daily management
 - **Sandbox Image** — Build an isolated environment for secure tool execution
 
@@ -99,6 +100,9 @@ Install system packages inside the Docker image:
 - **Editors**: `vim`, `nano` — Text editors
 - **Languages**: `python3`, `nodejs`, `npm` — Programming runtimes
 - **Browsers**: `chromium` — For web automation
+
+### Homebrew (Optional)
+Optionally install Homebrew non-interactively inside the Docker container. This is useful when running from Windows Git Bash or other environments where host install isn't desired.
 
 ### Channel Configuration
 Set up messaging platform integration:
